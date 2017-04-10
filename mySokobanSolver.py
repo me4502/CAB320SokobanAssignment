@@ -8,8 +8,10 @@ You should complete the functions and classes according to their specified inter
  
 
 '''
+from math import sqrt
 
 import search
+from search import astar_graph_search as astar_graph
 
 import sokoban
 
@@ -65,7 +67,7 @@ class SokobanPuzzle(search.Problem):
     
     '''
     ##         "INSERT YOUR CODE HERE"
-    
+
     def __init__(self, warehouse):
         raise NotImplementedError()
 
@@ -102,9 +104,9 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
-    
+
     ##         "INSERT YOUR CODE HERE"
-    
+
     raise NotImplementedError()
 
 
@@ -125,15 +127,18 @@ def solve_sokoban_elem(warehouse):
             For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
             If the puzzle is already in a goal state, simply return []
     '''
-    
+
     ##         "INSERT YOUR CODE HERE"
-    
+
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+
+offset_states = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
 def can_go_there(warehouse, dst):
-    '''    
+    """    
     Determine whether the worker can walk to the cell dst=(row,col) 
     without pushing any box.
     
@@ -142,11 +147,39 @@ def can_go_there(warehouse, dst):
     @return
       True if the worker can walk to cell dst=(row,col) without pushing any box
       False otherwise
-    '''
-    
-    ##         "INSERT YOUR CODE HERE"
-    
-    raise NotImplementedError()
+    """
+
+    def heuristic(n):
+        state = n.state
+        return sqrt(((state[0] - dst[0]) ** 2) + ((state[1] - dst[1]) ** 2))
+
+    print(str(warehouse.walls))
+    print(str(warehouse.boxes))
+
+    class FindPathProblem(search.Problem):
+        def value(self, state):
+            return heuristic(state)
+
+        def result(self, state, action):
+            new_state = (state[0] + action[0], state[1] + action[1])
+            return new_state
+
+        def actions(self, state):
+            possible_actions = list()
+
+            for offset in offset_states:
+                new_state = (state[0] + offset[0], state[1] + offset[1])
+                print(str(new_state) + " testing from " + str(state) + " with " + str(offset))
+                if new_state not in warehouse.boxes \
+                        and new_state not in warehouse.walls:
+                    possible_actions.append(offset)
+                    print(str(new_state) + " is valid")
+
+            return possible_actions
+
+    node = astar_graph(FindPathProblem(warehouse.worker, dst), heuristic)
+
+    return node is not None
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -168,9 +201,9 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
-    
+
     ##         "INSERT YOUR CODE HERE"
-    
+
     raise NotImplementedError()
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
