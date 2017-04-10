@@ -150,10 +150,8 @@ def can_go_there(warehouse, dst):
 
     def heuristic(n):
         state = n.state
-        return sqrt(((state[0] - dst[0]) ** 2) + ((state[1] - dst[1]) ** 2))
-
-    print(str(warehouse.walls))
-    print(str(warehouse.boxes))
+        # distance = sqrt(xdiff^2 + ydiff^2)
+        return sqrt(((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2))
 
     class FindPathProblem(search.Problem):
         def value(self, state):
@@ -168,11 +166,10 @@ def can_go_there(warehouse, dst):
 
             for offset in offset_states:
                 new_state = (state[0] + offset[0], state[1] + offset[1])
-                print(str(new_state) + " testing from " + str(state) + " with " + str(offset))
-                if new_state not in warehouse.boxes \
-                        and new_state not in warehouse.walls:
+                flipped_state = (new_state[1], new_state[0])
+                if flipped_state not in warehouse.boxes \
+                        and flipped_state not in warehouse.walls:
                     possible_actions.append(offset)
-                    print(str(new_state) + " is valid")
 
             return possible_actions
 
