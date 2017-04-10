@@ -19,15 +19,14 @@ import sokoban
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
 def my_team():
-    '''
+    """
     Return the list of the team members of this assignment submission as a list
     of triplet of the form (student_number, first_name, last_name)
-    
-    '''
-#    return [ (1234567, 'Ada', 'Lovelace'), (1234568, 'Grace', 'Hopper'), (1234569, 'Eva', 'Tardos') ]
-    raise NotImplementedError()
+    """
+    return [(8884731, 'Astrid', 'Jonelynas'),
+            (8847436, 'Lindsay', 'Watt'),
+            (9342401, 'Madeline', 'Miller')]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
