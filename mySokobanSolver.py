@@ -165,16 +165,12 @@ def can_go_there(warehouse, dst):
             return new_state
 
         def actions(self, state):
-            possible_actions = list()
-
             for offset in offset_states:
                 new_state = (state[0] + offset[0], state[1] + offset[1])
                 flipped_state = (new_state[1], new_state[0])
                 if flipped_state not in warehouse.boxes \
                         and flipped_state not in warehouse.walls:
-                    possible_actions.append(offset)
-
-            return possible_actions
+                    yield offset
 
     node = astar_graph(FindPathProblem(warehouse.worker, dst), heuristic)
 
