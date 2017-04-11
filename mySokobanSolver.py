@@ -47,8 +47,52 @@ def taboo_cells(warehouse):
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.  
     '''
-    ##         "INSERT YOUR CODE HERE"    
-    raise NotImplementedError()
+
+    # some constants
+    squares_to_remove = ['$', '@']
+    target_squares = ['.', '!', '*']
+    wall_square = '#'
+    taboo_square = 'X'
+
+    def is_corner_cell(warehouse, x, y):
+        '''
+        cell is in a corner if there is at least 1 wall above/below
+        and at least one wall left/right... I think :P
+        '''
+        num_ud_walls = 0
+        num_lr_walls = 0
+        # check for walls above and below
+        for (dx, dy) in [(0,1),(0,-1)]:
+            if warehouse[y+dy][x+dx] == wall_square:
+                num_ud_walls += 1
+        # check for walls left and right
+        for (dx, dy) in [(1,0),(-1,0)]:
+            if warehouse[y+dy][x+dx] == wall_square:
+                num_lr_walls += 1
+        return ((num_ud_walls >= 1) and (num_lr_walls >= 1))
+
+    # get string representation
+    warehouse = str(warehouse)
+
+    # remove the things that aren't walls or targets
+    for char in squares_to_remove:
+        warehouse = warehouse.replace(char, ' ')
+
+    warehouse = [list(line) for line in warehouse.split('\n')]
+
+    for y in range(1, len(warehouse)-1):
+        for x in range(1, len(warehouse[0])-1):
+            if warehouse[y][x] not in target_squares:
+                if warehouse[y][x] != wall_square:
+                    if is_corner_cell(warehouse, x, y):
+                        warehouse[y][x] = taboo_square
+
+
+    warehouse = '\n'.join([''.join(line) for line in warehouse])
+
+    # for char in target_squares:
+    #     warehouse = warehouse.replace(char, ' ')
+    return str(warehouse)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
