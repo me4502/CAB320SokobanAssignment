@@ -229,7 +229,8 @@ class MacroSokobanPuzzle(search.Problem):
                 new_box_position = add_tuples(box, offset)
                 if can_go_there(current_warehouse, player_position) \
                         and new_box_position not in bad_cells \
-                        and new_box_position not in current_warehouse.walls:
+                        and new_box_position not in current_warehouse.walls \
+                        and new_box_position not in current_warehouse.boxes:
                     yield (box, offset_to_direction(offset))
 
     def result(self, state, action):
