@@ -120,7 +120,7 @@ def taboo_cells(warehouse):
                     if col[y2] in target_squares or col[y2] == wall_square:
                         break
                     if col[y2] == taboo_square and is_corner_cell(warehouse, x, y2+y+1):
-                        if all([is_corner_cell(warehouse, x, y3, 1) for y3 in range(x+1, y2+y+1)]):
+                        if all([is_corner_cell(warehouse, x, y3, 1) for y3 in range(y+1, y2+y+1)]):
                             for y4 in range(y+1, y2+y+1):
                                 warehouse[y4][x] = 'X'
 
