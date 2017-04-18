@@ -5,7 +5,7 @@ will be called by a marker script.
 You should complete the functions and classes according to their specified
 interfaces.
 """
-from math import sqrt
+import itertools
 
 import search
 from search import astar_graph_search as astar_graph
@@ -50,7 +50,13 @@ def direction_to_offset(direction):
         return -1, 0
     else:
         raise ValueError("Unknown direction")
+
+
+def add_tuples(tuple1, tuple2):
+    return tuple1[0] + tuple2[0], tuple1[1] + tuple2[1]
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 
 def taboo_cells(warehouse):
     '''
@@ -94,9 +100,9 @@ def taboo_cells(warehouse):
             if warehouse[y + dy][x + dx] == wall_square:
                 num_lr_walls += 1
         if wall:
-            return ((num_ud_walls >= 1) or (num_lr_walls >= 1))
+            return (num_ud_walls >= 1) or (num_lr_walls >= 1)
         else:
-            return ((num_ud_walls >= 1) and (num_lr_walls >= 1))
+            return (num_ud_walls >= 1) and (num_lr_walls >= 1)
 
     # get string representation
     warehouse_str = str(warehouse)
@@ -182,10 +188,13 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']
         """
-        bad_cells = list(find_2D_iterator(taboo_cells(self.warehouse), "X"))
+        global bad_cells
+        if bad_cells is None:
+            bad_cells = set(find_2D_iterator(taboo_cells(self.warehouse), "X"))
+
         for offset in offset_states:
-            new_state = (state[0] + offset[0], state[1] + offset[1])
-            beyond_state = (new_state[0] + offset[0], new_state[1] + offset[1])
+            new_state = add_tuples(state, offset)
+            beyond_state = add_tuples(new_state, offset)
             flipped_state = (new_state[1], new_state[0])
             flipped_beyond_state = (beyond_state[1], beyond_state[0])
             if flipped_state not in self.warehouse.walls:
@@ -203,18 +212,22 @@ class MacroSokobanPuzzle(search.Problem):
 
     def __init__(self, initial, goal):
         self.initial = initial
-        self.goal = goal.replace("@", " ").replace("!", " ").replace("#", " ")
+        self.goal = goal.replace("@", " ")
 
     def actions(self, state):
         current_warehouse = sokoban.Warehouse()
-        current_warehouse.extract_locations(state)
-        bad_cells = list(find_2D_iterator(taboo_cells(current_warehouse), "X"))
+        current_warehouse.extract_locations(state.split(sep="\n"))
+        print(str(current_warehouse))
+        global bad_cells
+
+        if bad_cells is None:
+            bad_cells = set(find_2D_iterator(taboo_cells(current_warehouse),
+                                             "X"))
         for box in current_warehouse.boxes:
             for offset in offset_states:
                 player_position = (box[0] + (offset[0] * -1),
                                    box[1] + (offset[1] * -1))
-                new_box_position = (box[0] + offset[0],
-                                    box[1] + offset[1])
+                new_box_position = add_tuples(box, offset)
                 if can_go_there(current_warehouse, player_position) \
                         and new_box_position not in bad_cells \
                         and new_box_position not in current_warehouse.walls:
@@ -222,19 +235,24 @@ class MacroSokobanPuzzle(search.Problem):
 
     def result(self, state, action):
         current_warehouse = sokoban.Warehouse()
-        current_warehouse.extract_locations(state)
+        current_warehouse.extract_locations(state.split(sep="\n"))
         box = action[0]
-        offset = direction_to_offset(action[1])
-        current_warehouse.worker = box
-        current_warehouse.boxes.remove(box)
-        current_warehouse.boxes.append((box[0] + offset[0],
-                                        box[1] + offset[1]))
-        return current_warehouse.__str__()
+        if box in current_warehouse.boxes:
+            offset = direction_to_offset(action[1])
+            current_warehouse.worker = box
+            current_warehouse.boxes.remove(box)
+            current_warehouse.boxes.append((box[0] + offset[0],
+                                            box[1] + offset[1]))
+            print(str(current_warehouse))
+            return str(current_warehouse)
+        else:
+            print(str(current_warehouse))
+            print(box)
+            print(current_warehouse.boxes)
+            raise ValueError("Box not in warehouse!")
 
     def goal_test(self, state):
-        temp_state = state.replace("@", " ").replace("!", " ") \
-            .replace("#", " ")
-        return temp_state == self.goal
+        return state.replace("@", " ") == self.goal
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -414,6 +432,7 @@ def solve_sokoban_elem(warehouse):
 
 
 offset_states = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+bad_cells = None
 
 
 def can_go_there(warehouse, dst):
@@ -447,11 +466,11 @@ def can_go_there(warehouse, dst):
         def actions(self, state):
             for offset in offset_states:
                 new_state = (state[0] + offset[0], state[1] + offset[1])
+                # Tester script requires it to be flipped
                 flipped_state = (new_state[1], new_state[0])
                 if flipped_state not in warehouse.boxes \
                         and flipped_state not in warehouse.walls:
                     yield offset
-
     node = astar_graph(FindPathProblem(warehouse.worker, dst), heuristic)
 
     return node is not None

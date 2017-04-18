@@ -196,14 +196,15 @@ def test_main_search():
 
 
 def test_macro_search():
-    wh = Warehouse()
-    wh.extract_locations(puzzle_t1.split(sep='\n'))
-    print(wh)
+    problem_file = "./warehouses/warehouse_01.txt"
+    with open(problem_file) as f:
+        wh = ''.join(f.readlines())
+        print(wh)
 
-    goal = wh.__str__().replace("$", " ").replace(".", "*")
+        goal = wh.replace("$", " ").replace(".", "*")
 
-    node = search.depth_limited_search(MacroSokobanPuzzle(wh.__str__(), goal))
-    print(node)
+        node = search.iterative_deepening_search(MacroSokobanPuzzle(wh, goal))
+        print(node)
 
 if __name__ == "__main__":
 #    test_main_search()
