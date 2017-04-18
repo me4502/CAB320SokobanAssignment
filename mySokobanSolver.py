@@ -195,11 +195,9 @@ class SokobanPuzzle(search.Problem):
         for offset in offset_states:
             new_state = add_tuples(state, offset)
             beyond_state = add_tuples(new_state, offset)
-            flipped_state = (new_state[1], new_state[0])
-            flipped_beyond_state = (beyond_state[1], beyond_state[0])
-            if flipped_state not in self.warehouse.walls:
-                if flipped_state in self.warehouse.boxes:
-                    if flipped_beyond_state in bad_cells:
+            if new_state not in self.warehouse.walls:
+                if new_state in self.warehouse.boxes:
+                    if beyond_state in bad_cells:
                         continue
                     yield offset_to_direction(offset)
 
