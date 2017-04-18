@@ -63,7 +63,7 @@ def taboo_cells(warehouse):
     Identify the taboo cells of a warehouse. A cell is called taboo if whenever
     a box get pushed on such a cell then the puzzle becomes unsolvable.
     When determining the taboo cells, you must ignore all the existing boxes,
-    simply consider the walls and the target  cells.
+    simply consider the walls and the target cells.
     Use only the following two rules to determine the taboo cells;
      Rule 1: if a cell is a corner and not a target, then it is a taboo cell.
      Rule 2: all the cells between two corners along a wall are taboo if none
@@ -163,7 +163,6 @@ def taboo_cells(warehouse):
     for char in target_squares:
         warehouse_str = warehouse_str.replace(char, ' ')
     return warehouse_str
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

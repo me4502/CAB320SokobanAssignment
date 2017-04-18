@@ -10,7 +10,6 @@ def test_taboo_cells(n):
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     answer = taboo_cells(wh)
-    # begin debug
     print(answer)
 
 if __name__ == "__main__":
