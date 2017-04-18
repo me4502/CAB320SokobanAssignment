@@ -216,7 +216,6 @@ class MacroSokobanPuzzle(search.Problem):
     def actions(self, state):
         current_warehouse = sokoban.Warehouse()
         current_warehouse.extract_locations(state.split(sep="\n"))
-        print(str(current_warehouse))
         global bad_cells
 
         if bad_cells is None:
@@ -241,9 +240,7 @@ class MacroSokobanPuzzle(search.Problem):
             offset = direction_to_offset(action[1])
             current_warehouse.worker = box
             current_warehouse.boxes.remove(box)
-            current_warehouse.boxes.append((box[0] + offset[0],
-                                            box[1] + offset[1]))
-            print(str(current_warehouse))
+            current_warehouse.boxes.append(add_tuples(box, offset))
             return str(current_warehouse)
         else:
             print(str(current_warehouse))
@@ -460,16 +457,14 @@ def can_go_there(warehouse, dst):
             return heuristic(state)
 
         def result(self, state, action):
-            new_state = (state[0] + action[0], state[1] + action[1])
+            new_state = add_tuples(state, action)
             return new_state
 
         def actions(self, state):
             for offset in offset_states:
-                new_state = (state[0] + offset[0], state[1] + offset[1])
-                # Tester script requires it to be flipped
-                flipped_state = (new_state[1], new_state[0])
-                if flipped_state not in warehouse.boxes \
-                        and flipped_state not in warehouse.walls:
+                new_state = add_tuples(state, offset)
+                if new_state not in warehouse.boxes \
+                        and new_state not in warehouse.walls:
                     yield offset
     node = astar_graph(FindPathProblem(warehouse.worker, dst), heuristic)
 
