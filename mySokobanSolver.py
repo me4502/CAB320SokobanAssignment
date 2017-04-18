@@ -26,6 +26,30 @@ def my_team():
             (9342401, 'Madeline', 'Miller')]
 
 
+def offset_to_direction(offset):
+    if offset == (0, 1):
+        return "Down"
+    elif offset == (0, -1):
+        return "Up"
+    elif offset == (1, 0):
+        return "Right"
+    elif offset == (-1, 0):
+        return "Left"
+    else:
+        raise ValueError("Unknown offset state")
+
+
+def direction_to_offset(direction):
+    if direction == "Down":
+        return 0, 1
+    elif direction == "Up":
+        return 0, -1
+    elif direction == "Right":
+        return 1, 0
+    elif direction == "Left":
+        return -1, 0
+    else:
+        raise ValueError("Unknown direction")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def taboo_cells(warehouse):
@@ -168,16 +192,49 @@ class SokobanPuzzle(search.Problem):
                 if flipped_state in self.warehouse.boxes:
                     if flipped_beyond_state in bad_cells:
                         continue
-                if offset == (0, 1):
-                    yield "Down"
-                elif offset == (0, -1):
-                    yield "Up"
-                elif offset == (1, 0):
-                    yield "Right"
-                elif offset == (-1, 0):
-                    yield "Left"
-                else:
-                    raise ValueError("Unknown offset state")
+                    yield offset_to_direction(offset)
+
+
+class MacroSokobanPuzzle(search.Problem):
+    """
+    Class to represent a Sokoban puzzle.
+    This solves at a larger scale, by finding a list of macro moves.
+    """
+
+    def __init__(self, initial, goal):
+        self.initial = initial
+        self.goal = goal.replace("@", " ").replace("!", " ").replace("#", " ")
+
+    def actions(self, state):
+        current_warehouse = sokoban.Warehouse()
+        current_warehouse.extract_locations(state)
+        bad_cells = list(find_2D_iterator(taboo_cells(current_warehouse), "X"))
+        for box in current_warehouse.boxes:
+            for offset in offset_states:
+                player_position = (box[0] + (offset[0] * -1),
+                                   box[1] + (offset[1] * -1))
+                new_box_position = (box[0] + offset[0],
+                                    box[1] + offset[1])
+                if can_go_there(current_warehouse, player_position) \
+                        and new_box_position not in bad_cells \
+                        and new_box_position not in current_warehouse.walls:
+                    yield (box, offset_to_direction(offset))
+
+    def result(self, state, action):
+        current_warehouse = sokoban.Warehouse()
+        current_warehouse.extract_locations(state)
+        box = action[0]
+        offset = direction_to_offset(action[1])
+        current_warehouse.worker = box
+        current_warehouse.boxes.remove(box)
+        current_warehouse.boxes.append((box[0] + offset[0],
+                                        box[1] + offset[1]))
+        return current_warehouse.__str__()
+
+    def goal_test(self, state):
+        temp_state = state.replace("@", " ").replace("!", " ") \
+            .replace("#", " ")
+        return temp_state == self.goal
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

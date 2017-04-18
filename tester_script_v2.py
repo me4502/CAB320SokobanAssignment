@@ -25,7 +25,8 @@ from __future__ import division
 import search
 from sokoban import Warehouse
 
-from mySokobanSolver import my_team, taboo_cells, SokobanPuzzle, check_action_seq
+from mySokobanSolver import my_team, taboo_cells, SokobanPuzzle, \
+    check_action_seq, MacroSokobanPuzzle
 from mySokobanSolver import solve_sokoban_elem, can_go_there, solve_sokoban_macro
 
 
@@ -192,10 +193,21 @@ def test_main_search():
     node = search.astar_graph_search(SokobanPuzzle(wh.worker, dst),
                                      heuristic)
     print(node)
-    pass
+
+
+def test_macro_search():
+    wh = Warehouse()
+    wh.extract_locations(puzzle_t1.split(sep='\n'))
+    print(wh)
+
+    goal = wh.__str__().replace("$", " ").replace(".", "*")
+
+    node = search.depth_limited_search(MacroSokobanPuzzle(wh.__str__(), goal))
+    print(node)
 
 if __name__ == "__main__":
 #    test_main_search()
+    test_macro_search()
 #    test_warehouse_1() # test Warehouse
 #    test_warehouse_2() # test Warehouse
 
