@@ -280,11 +280,10 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     """
-    # call warehouse.worker for worker location
+    # call warehouse.worker and warehouse.boxes for locations
     x, y = warehouse.worker
     x_boxes, y_boxes = warehouse.boxes
-    print(x_boxes)
-    print(y_boxes)
+
     # failedSequence return string
     failedSequence = 'Failure'
 
@@ -297,14 +296,13 @@ def check_action_seq(warehouse, action_seq):
             next_y = y
             # see if able to move the player in this direction
             if (next_x, next_y) in warehouse.walls:
-                return failedSequence  # impossible move
+                return failedSequence  # impossible move, player was blocked
             elif (next_x, next_y) in warehouse.boxes:
                 if (next_x - 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
                     warehouse.boxes.append((next_x - 1, next_y))
-                    # x_boxes = x_boxes - 1
                     x = next_x
                 else:
                     return failedSequence  # box was blocked
@@ -370,7 +368,6 @@ def check_action_seq(warehouse, action_seq):
     print (applicableSequence)
 
     # implement change character information for updating
-
     warehouse.worker = x, y
     '''
     The following code has been adapted from the provided
@@ -379,7 +376,7 @@ def check_action_seq(warehouse, action_seq):
     X, Y = zip(*warehouse.walls)  # pythonic version of the above
     x_size, y_size = 1 + max(X), 1 + max(Y)
 
-    vis = [[" "] * x_size for y in range(y_size)]
+    vis = [[" "] * x_size for z in range(y_size)]
     for (x, y) in warehouse.walls:
         vis[y][x] = "#"
     for (x, y) in warehouse.targets:
