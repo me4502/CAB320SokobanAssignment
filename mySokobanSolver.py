@@ -189,7 +189,8 @@ class SokobanPuzzle(search.Problem):
         """
         global bad_cells
         if bad_cells is None:
-            bad_cells = set(find_2D_iterator(taboo_cells(self.warehouse), "X"))
+            bad_cells = set(find_2D_iterator(taboo_cells(self.warehouse)
+                                             .split("\n"), "X"))
 
         for offset in offset_states:
             new_state = add_tuples(state, offset)
@@ -219,8 +220,9 @@ class MacroSokobanPuzzle(search.Problem):
         global bad_cells
 
         if bad_cells is None:
-            bad_cells = set(find_2D_iterator(taboo_cells(current_warehouse),
-                                             "X"))
+            bad_cells = set(find_2D_iterator(taboo_cells(current_warehouse)
+                                              .split("\n"), "X"))
+
         for box in current_warehouse.boxes:
             for offset in offset_states:
                 player_position = (box[0] + (offset[0] * -1),
@@ -449,7 +451,6 @@ def can_go_there(warehouse, dst):
         return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
 
     class FindPathProblem(search.Problem):
-
         def value(self, state):
             return heuristic(state)
 
