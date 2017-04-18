@@ -149,6 +149,9 @@ def check_action_seq(warehouse, action_seq):
     """
     # call warehouse.worker for worker location
     x, y = warehouse.worker
+    x_boxes, y_boxes = warehouse.boxes
+    print(x_boxes)
+    print(y_boxes)
     # failedSequence return string
     failedSequence = 'Failure'
 
@@ -163,11 +166,13 @@ def check_action_seq(warehouse, action_seq):
             if (next_x, next_y) in warehouse.walls:
                 return failedSequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                assert (x, y) in warehouse.boxes
-                if (next_x, next_y) not in warehouse.walls and (next_x, next_y) not in warehouse.boxes:
+                if (next_x - 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
-                    print('can move the box')
+                    warehouse.boxes.remove((next_x, next_y))
+                    warehouse.boxes.append((next_x - 1, next_y))
+                    # x_boxes = x_boxes - 1
+                    x = next_x
                 else:
                     return failedSequence  # box was blocked
             else:
@@ -179,11 +184,12 @@ def check_action_seq(warehouse, action_seq):
             if (next_x, next_y) in warehouse.walls:
                 return failedSequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                assert (x, y) in warehouse.boxes
-                if (next_x, next_y) not in warehouse.walls and (next_x, next_y) not in warehouse.boxes:
+                if (next_x + 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
-                    print('can move the box')
+                    warehouse.boxes.remove((next_x, next_y))
+                    warehouse.boxes.append((next_x + 1, next_y))
+                    x = next_x
                 else:
                     return failedSequence  # box was blocked
             else:
@@ -195,11 +201,12 @@ def check_action_seq(warehouse, action_seq):
             if (next_x, next_y) in warehouse.walls:
                 return failedSequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                assert (x, y) in warehouse.boxes
-                if (next_x, next_y) not in warehouse.walls and (next_x, next_y) not in warehouse.boxes:
+                if (next_x, next_y - 1) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
-                    print('can move the box')
+                    warehouse.boxes.remove((next_x, next_y))
+                    warehouse.boxes.append((next_x, next_y - 1))
+                    y = next_y
                 else:
                     return failedSequence  # box was blocked
             else:
@@ -211,11 +218,12 @@ def check_action_seq(warehouse, action_seq):
             if (next_x, next_y) in warehouse.walls:
                 return failedSequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                assert (x, y) in warehouse.boxes
-                if (next_x, next_y) not in warehouse.walls and (next_x, next_y) not in warehouse.boxes:
+                if (next_x, next_y + 1) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
-                    print('can move the box')
+                    warehouse.boxes.remove((next_x, next_y))
+                    warehouse.boxes.append((next_x, next_y + 1))
+                    y = next_y
                 else:
                     return failedSequence  # box was blocked
             else:
@@ -224,9 +232,43 @@ def check_action_seq(warehouse, action_seq):
             raise ValueError("No action sequence")
             return failedSequence
 
+    # print statement just to check it got to the end and actions are valid
     applicableSequence = 'Yes'
     print (applicableSequence)
-    return str(applicableSequence)
+
+    # implement change character information for updating
+
+    warehouse.worker = x, y
+    '''
+    The following code has been adapted from the provided
+    Sokoban.py Warehouse.__str__ method
+    '''
+    X, Y = zip(*warehouse.walls)  # pythonic version of the above
+    x_size, y_size = 1 + max(X), 1 + max(Y)
+
+    vis = [[" "] * x_size for y in range(y_size)]
+    for (x, y) in warehouse.walls:
+        vis[y][x] = "#"
+    for (x, y) in warehouse.targets:
+        vis[y][x] = "."
+    # Note y is worker[1], x is worker[0]
+    if vis[warehouse.worker[1]][warehouse.worker[0]] == ".":
+        vis[warehouse.worker[1]][warehouse.worker[0]] = "!"
+    else:
+        vis[warehouse.worker[1]][warehouse.worker[0]] = "@"
+    # if a box is on a target display a "*"
+    # exploit the fact that Targets has been already processed
+    for (x, y) in warehouse.boxes:
+        if vis[y][x] == ".":  # if on target
+            vis[y][x] = "*"
+        else:
+            vis[y][x] = "$"
+    warehouse = "\n".join(["".join(line) for line in vis])
+    '''
+    End adapted code from Sokoban.py Warehouse.__str__ method
+    '''
+    print (str(warehouse))
+    return str(warehouse)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

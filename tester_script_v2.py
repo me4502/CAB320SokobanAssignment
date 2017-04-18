@@ -64,7 +64,7 @@ expected_answer_1 ='''
  # .#
  #  ###
  #*   #
- #  $@#
+ # $@ #
  #  ###
  ####
 '''
@@ -120,7 +120,7 @@ def test_check_elem_action_seq():
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     print('Initial state \n', wh ,'\n')
-    answer = check_action_seq(wh, ['Right', 'Right', 'Down'])
+    answer = check_action_seq(wh, ['Right', 'Right', 'Down', 'Left'])
 
     if same_multi_line_strings(answer,expected_answer_1):
         print('Test check_elem_action_seq passed\n')
