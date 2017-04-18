@@ -22,7 +22,7 @@ Make sure that your code runs without errors with this script.
 from __future__ import print_function
 from __future__ import division
 
-
+import search
 from sokoban import Warehouse
 
 from mySokobanSolver import my_team, taboo_cells, SokobanPuzzle, check_action_seq
@@ -177,14 +177,32 @@ def test_check_macro_action_seq():
     print( check_macro_action_seq(wh.copy(), [((2, 3), 'Left')]) )
 
 
+def test_main_search():
+    wh = Warehouse()
+    wh.extract_locations(puzzle_t1.split(sep='\n'))
+    print(wh)
+
+    dst = (4, 5)
+
+    def heuristic(n):
+        state = n.state
+        # distance = sqrt(xdiff^2 + ydiff^2)
+        return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
+
+    node = search.astar_graph_search(SokobanPuzzle(wh.worker, dst),
+                                     heuristic)
+    print(node)
+    pass
+
 if __name__ == "__main__":
+#    test_main_search()
 #    test_warehouse_1() # test Warehouse
 #    test_warehouse_2() # test Warehouse
 
 #    print(my_team())  # should print your team
 
-#    test_taboo_cells()
-    test_check_elem_action_seq()
+    test_taboo_cells()
+#    test_check_elem_action_seq()
 #    test_solve_sokoban_elem()
 #    test_can_go_there()
 #    test_solve_sokoban_macro()

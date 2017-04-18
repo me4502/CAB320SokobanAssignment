@@ -11,7 +11,7 @@ import search
 from search import astar_graph_search as astar_graph
 
 import sokoban
-from sokoban import Warehouse
+from sokoban import find_2D_iterator
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -27,7 +27,6 @@ def my_team():
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
 def taboo_cells(warehouse):
     '''
@@ -55,10 +54,10 @@ def taboo_cells(warehouse):
     wall_square = '#'
     taboo_square = 'X'
 
-    def is_corner_cell(warehouse, x, y):
+    def is_corner_cell(warehouse, x, y, wall = 0):
         '''
         cell is in a corner if there is at least 1 wall above/below
-        and at least one wall left/right... I think :P
+        and at least one wall left/right...
         '''
         num_ud_walls = 0
         num_lr_walls = 0
@@ -70,29 +69,70 @@ def taboo_cells(warehouse):
         for (dx, dy) in [(1, 0), (-1, 0)]:
             if warehouse[y + dy][x + dx] == wall_square:
                 num_lr_walls += 1
-        return ((num_ud_walls >= 1) and (num_lr_walls >= 1))
+        if wall:
+            return ((num_ud_walls >= 1) or (num_lr_walls >= 1))
+        else:
+            return ((num_ud_walls >= 1) and (num_lr_walls >= 1))
 
     # get string representation
-    warehouse = str(warehouse)
+    warehouse_str = str(warehouse)
 
     # remove the things that aren't walls or targets
     for char in squares_to_remove:
-        warehouse = warehouse.replace(char, ' ')
+        warehouse_str = warehouse_str.replace(char, ' ')
 
-    warehouse = [list(line) for line in warehouse.split('\n')]
+    # convert warehouse string into 2D array
+    warehouse_2d = [list(line) for line in warehouse_str.split('\n')]
 
-    for y in range(1, len(warehouse) - 1):
-        for x in range(1, len(warehouse[0]) - 1):
-            if warehouse[y][x] not in target_squares:
-                if warehouse[y][x] != wall_square:
-                    if is_corner_cell(warehouse, x, y):
-                        warehouse[y][x] = taboo_square
+    # apply rule 1
+    for y in range(len(warehouse_2d)-1):
+        inside = False
+        for x in range(len(warehouse_2d[0])-1):
+            # move through row in warehouse until we hit first wall
+            # means we are now inside the warehouse
+            if not inside:
+                if warehouse_2d[y][x] == wall_square:
+                    inside = True
+            else:
+                # check if all the cells to the right of current cell are empty
+                # means we are now outside the warehouse
+                if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
+                    break
+                if warehouse_2d[y][x] not in target_squares:
+                    if warehouse_2d[y][x] != wall_square:
+                        if is_corner_cell(warehouse_2d, x, y):
+                            warehouse_2d[y][x] = taboo_square
 
-    warehouse = '\n'.join([''.join(line) for line in warehouse])
+    # apply rule 2
+    for y in range(1, len(warehouse_2d)-1):
+        for x in range(1, len(warehouse_2d[0])-1):
+            if warehouse_2d[y][x] == taboo_square and is_corner_cell(warehouse_2d, x, y):
+                row = warehouse_2d[y][x+1:]
+                col = [row[x] for row in warehouse_2d[y+1:][:]]
+                # fill in taboo_cells in row to the right of corner taboo cell
+                for x2 in range(len(row)):
+                    if row[x2] in target_squares or row[x2] == wall_square:
+                        break
+                    if row[x2] == taboo_square and is_corner_cell(warehouse_2d, x2+x+1, y):
+                        if all([is_corner_cell(warehouse_2d, x3, y, 1) for x3 in range(x+1, x2+x+1)]):
+                            for x4 in range(x+1, x2+x+1):
+                                warehouse_2d[y][x4] = 'X'
+                # fill in taboo_cells in column moving down from corner taboo cell
+                for y2 in range(len(col)):
+                    if col[y2] in target_squares or col[y2] == wall_square:
+                        break
+                    if col[y2] == taboo_square and is_corner_cell(warehouse_2d, x, y2+y+1):
+                        if all([is_corner_cell(warehouse_2d, x, y3, 1) for y3 in range(y+1, y2+y+1)]):
+                            for y4 in range(y+1, y2+y+1):
+                                warehouse_2d[y4][x] = 'X'
 
-    # for char in target_squares:
-    #     warehouse = warehouse.replace(char, ' ')
-    return str(warehouse)
+    # convert 2D array back into string
+    warehouse_str = '\n'.join([''.join(line) for line in warehouse_2d])
+
+    # remove the remaining target_squares
+    for char in target_squares:
+        warehouse_str = warehouse_str.replace(char, ' ')
+    return warehouse_str
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -107,10 +147,10 @@ class SokobanPuzzle(search.Problem):
     Use the sliding puzzle and the pancake puzzle for inspiration!
     """
 
-    # "INSERT YOUR CODE HERE"
-
-    def __init__(self, warehouse):
-        raise NotImplementedError()
+    def __init__(self, warehouse, initial):
+        self.initial = initial
+        self.warehouse = warehouse
+        # TODO Find goal.
 
     def actions(self, state):
         """
@@ -118,8 +158,26 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']
         """
-        raise NotImplementedError
-
+        bad_cells = list(find_2D_iterator(taboo_cells(self.warehouse), "X"))
+        for offset in offset_states:
+            new_state = (state[0] + offset[0], state[1] + offset[1])
+            beyond_state = (new_state[0] + offset[0], new_state[1] + offset[1])
+            flipped_state = (new_state[1], new_state[0])
+            flipped_beyond_state = (beyond_state[1], beyond_state[0])
+            if flipped_state not in self.warehouse.walls:
+                if flipped_state in self.warehouse.boxes:
+                    if flipped_beyond_state in bad_cells:
+                        continue
+                if offset == (0, 1):
+                    yield "Down"
+                elif offset == (0, -1):
+                    yield "Up"
+                elif offset == (1, 0):
+                    yield "Right"
+                elif offset == (-1, 0):
+                    yield "Left"
+                else:
+                    raise ValueError("Unknown offset state")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -316,8 +374,9 @@ def can_go_there(warehouse, dst):
 
     def heuristic(n):
         state = n.state
-        # distance = sqrt(xdiff^2 + ydiff^2)
-        return sqrt(((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2))
+        # distance = sqrt(xdiff^2 + ydiff^2). sqrt not required as we only
+        # care about order, and it's slow
+        return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
 
     class FindPathProblem(search.Problem):
 
