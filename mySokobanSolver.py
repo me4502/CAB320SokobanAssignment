@@ -75,62 +75,64 @@ def taboo_cells(warehouse):
             return ((num_ud_walls >= 1) and (num_lr_walls >= 1))
 
     # get string representation
-    warehouse = str(warehouse)
+    warehouse_str = str(warehouse)
 
     # remove the things that aren't walls or targets
     for char in squares_to_remove:
-        warehouse = warehouse.replace(char, ' ')
+        warehouse_str = warehouse_str.replace(char, ' ')
 
     # convert warehouse string into 2D array
-    warehouse = [list(line) for line in warehouse.split('\n')]
+    warehouse_2d = [list(line) for line in warehouse_str.split('\n')]
 
     # apply rule 1
-    for y in range(1, len(warehouse)-1):
+    for y in range(len(warehouse_2d)-1):
         inside = False
-        for x in range(1, len(warehouse[0])-1):
+        for x in range(len(warehouse_2d[0])-1):
             # move through row in warehouse until we hit first wall
             # means we are now inside the warehouse
             if not inside:
-                if warehouse[y][x] == wall_square:
+                if warehouse_2d[y][x] == wall_square:
                     inside = True
             else:
                 # check if all the cells to the right of current cell are empty
                 # means we are now outside the warehouse
-                if all([cell == ' ' for cell in warehouse[y][x:]]):
+                if all([cell == ' ' for cell in warehouse_2d[y][x:]]):
                     break
-                if warehouse[y][x] not in target_squares:
-                    if warehouse[y][x] != wall_square:
-                        if is_corner_cell(warehouse, x, y):
-                            warehouse[y][x] = taboo_square
+                if warehouse_2d[y][x] not in target_squares:
+                    if warehouse_2d[y][x] != wall_square:
+                        if is_corner_cell(warehouse_2d, x, y):
+                            warehouse_2d[y][x] = taboo_square
 
     # apply rule 2
-    for y in range(1, len(warehouse)-1):
-        for x in range(1, len(warehouse[0])-1):
-            if warehouse[y][x] == taboo_square and is_corner_cell(warehouse, x, y):
-                row = warehouse[y][x+1:]
-                col = [row[x] for row in warehouse[y+1:][:]]
+    for y in range(1, len(warehouse_2d)-1):
+        for x in range(1, len(warehouse_2d[0])-1):
+            if warehouse_2d[y][x] == taboo_square and is_corner_cell(warehouse_2d, x, y):
+                row = warehouse_2d[y][x+1:]
+                col = [row[x] for row in warehouse_2d[y+1:][:]]
+                # fill in taboo_cells in row to the right of corner taboo cell
                 for x2 in range(len(row)):
                     if row[x2] in target_squares or row[x2] == wall_square:
                         break
-                    if row[x2] == taboo_square and is_corner_cell(warehouse, x2+x+1, y):
-                        if all([is_corner_cell(warehouse, x3, y, 1) for x3 in range(x+1, x2+x+1)]):
+                    if row[x2] == taboo_square and is_corner_cell(warehouse_2d, x2+x+1, y):
+                        if all([is_corner_cell(warehouse_2d, x3, y, 1) for x3 in range(x+1, x2+x+1)]):
                             for x4 in range(x+1, x2+x+1):
-                                warehouse[y][x4] = 'X'
+                                warehouse_2d[y][x4] = 'X'
+                # fill in taboo_cells in column moving down from corner taboo cell
                 for y2 in range(len(col)):
                     if col[y2] in target_squares or col[y2] == wall_square:
                         break
-                    if col[y2] == taboo_square and is_corner_cell(warehouse, x, y2+y+1):
-                        if all([is_corner_cell(warehouse, x, y3, 1) for y3 in range(y+1, y2+y+1)]):
+                    if col[y2] == taboo_square and is_corner_cell(warehouse_2d, x, y2+y+1):
+                        if all([is_corner_cell(warehouse_2d, x, y3, 1) for y3 in range(y+1, y2+y+1)]):
                             for y4 in range(y+1, y2+y+1):
-                                warehouse[y4][x] = 'X'
+                                warehouse_2d[y4][x] = 'X'
 
     # convert 2D array back into string
-    warehouse = '\n'.join([''.join(line) for line in warehouse])
+    warehouse_str = '\n'.join([''.join(line) for line in warehouse_2d])
 
     # remove the remaining target_squares
     for char in target_squares:
-        warehouse = warehouse.replace(char, ' ')
-    return str(warehouse)
+        warehouse_str = warehouse_str.replace(char, ' ')
+    return warehouse_str
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
