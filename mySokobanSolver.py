@@ -11,7 +11,7 @@ import search
 from search import astar_graph_search as astar_graph
 
 import sokoban
-from sokoban import Warehouse
+from sokoban import find_2D_iterator
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -107,10 +107,10 @@ class SokobanPuzzle(search.Problem):
     Use the sliding puzzle and the pancake puzzle for inspiration!
     """
 
-    # "INSERT YOUR CODE HERE"
-
-    def __init__(self, warehouse):
-        raise NotImplementedError()
+    def __init__(self, warehouse, initial):
+        self.initial = initial
+        self.warehouse = warehouse
+        # TODO Find goal.
 
     def actions(self, state):
         """
@@ -118,8 +118,26 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']
         """
-        raise NotImplementedError
-
+        bad_cells = list(find_2D_iterator(taboo_cells(self.warehouse), "X"))
+        for offset in offset_states:
+            new_state = (state[0] + offset[0], state[1] + offset[1])
+            beyond_state = (new_state[0] + offset[0], new_state[1] + offset[1])
+            flipped_state = (new_state[1], new_state[0])
+            flipped_beyond_state = (beyond_state[1], beyond_state[0])
+            if flipped_state not in self.warehouse.walls:
+                if flipped_state in self.warehouse.boxes:
+                    if flipped_beyond_state in bad_cells:
+                        continue
+                if offset == (0, 1):
+                    yield "Down"
+                elif offset == (0, -1):
+                    yield "Up"
+                elif offset == (1, 0):
+                    yield "Right"
+                elif offset == (-1, 0):
+                    yield "Left"
+                else:
+                    raise ValueError("Unknown offset state")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -274,8 +292,9 @@ def can_go_there(warehouse, dst):
 
     def heuristic(n):
         state = n.state
-        # distance = sqrt(xdiff^2 + ydiff^2)
-        return sqrt(((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2))
+        # distance = sqrt(xdiff^2 + ydiff^2). sqrt not required as we only
+        # care about order, and it's slow
+        return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
 
     class FindPathProblem(search.Problem):
 
