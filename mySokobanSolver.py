@@ -5,12 +5,10 @@ will be called by a marker script.
 You should complete the functions and classes according to their specified
 interfaces.
 """
-import itertools
 
 import search
-from search import astar_graph_search as astar_graph
-
 import sokoban
+from search import astar_graph_search as astar_graph
 from sokoban import find_2D_iterator
 
 
@@ -59,7 +57,7 @@ def add_tuples(tuple1, tuple2):
 
 
 def taboo_cells(warehouse):
-    '''
+    """
     Identify the taboo cells of a warehouse. A cell is called taboo if whenever
     a box get pushed on such a cell then the puzzle becomes unsolvable.
     When determining the taboo cells, you must ignore all the existing boxes,
@@ -76,7 +74,7 @@ def taboo_cells(warehouse):
        an '#' and the taboo cells marked with an 'X'.
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.
-    '''
+    """
 
     # some constants
     squares_to_remove = ['$', '@']
@@ -85,10 +83,10 @@ def taboo_cells(warehouse):
     taboo_square = 'X'
 
     def is_corner_cell(warehouse, x, y, wall = 0):
-        '''
+        """
         cell is in a corner if there is at least 1 wall above/below
         and at least one wall left/right...
-        '''
+        """
         num_ud_walls = 0
         num_lr_walls = 0
         # check for walls above and below
@@ -136,23 +134,29 @@ def taboo_cells(warehouse):
     # apply rule 2
     for y in range(1, len(warehouse_2d)-1):
         for x in range(1, len(warehouse_2d[0])-1):
-            if warehouse_2d[y][x] == taboo_square and is_corner_cell(warehouse_2d, x, y):
+            if warehouse_2d[y][x] == taboo_square \
+                    and is_corner_cell(warehouse_2d, x, y):
                 row = warehouse_2d[y][x+1:]
                 col = [row[x] for row in warehouse_2d[y+1:][:]]
                 # fill in taboo_cells in row to the right of corner taboo cell
                 for x2 in range(len(row)):
                     if row[x2] in target_squares or row[x2] == wall_square:
                         break
-                    if row[x2] == taboo_square and is_corner_cell(warehouse_2d, x2+x+1, y):
-                        if all([is_corner_cell(warehouse_2d, x3, y, 1) for x3 in range(x+1, x2+x+1)]):
+                    if row[x2] == taboo_square \
+                            and is_corner_cell(warehouse_2d, x2+x+1, y):
+                        if all([is_corner_cell(warehouse_2d, x3, y, 1)
+                                for x3 in range(x+1, x2+x+1)]):
                             for x4 in range(x+1, x2+x+1):
                                 warehouse_2d[y][x4] = 'X'
-                # fill in taboo_cells in column moving down from corner taboo cell
+                # fill in taboo_cells in column moving down from corner taboo
+                # cell
                 for y2 in range(len(col)):
                     if col[y2] in target_squares or col[y2] == wall_square:
                         break
-                    if col[y2] == taboo_square and is_corner_cell(warehouse_2d, x, y2+y+1):
-                        if all([is_corner_cell(warehouse_2d, x, y3, 1) for y3 in range(y+1, y2+y+1)]):
+                    if col[y2] == taboo_square \
+                            and is_corner_cell(warehouse_2d, x, y2+y+1):
+                        if all([is_corner_cell(warehouse_2d, x, y3, 1)
+                                for y3 in range(y+1, y2+y+1)]):
                             for y4 in range(y+1, y2+y+1):
                                 warehouse_2d[y4][x] = 'X'
 
@@ -219,7 +223,7 @@ class MacroSokobanPuzzle(search.Problem):
 
         if bad_cells is None:
             bad_cells = set(find_2D_iterator(taboo_cells(current_warehouse)
-                                              .split("\n"), "X"))
+                                             .split("\n"), "X"))
 
         for box in current_warehouse.boxes:
             for offset in offset_states:
@@ -279,10 +283,9 @@ def check_action_seq(warehouse, action_seq):
     """
     # call warehouse.worker and warehouse.boxes for locations
     x, y = warehouse.worker
-    x_boxes, y_boxes = warehouse.boxes
 
     # failedSequence return string
-    failedSequence = 'Failure'
+    failed_sequence = 'Failure'
 
     # iterate through each move in the action_seq checking if valid
     for data in action_seq:
@@ -293,7 +296,7 @@ def check_action_seq(warehouse, action_seq):
             next_y = y
             # see if able to move the player in this direction
             if (next_x, next_y) in warehouse.walls:
-                return failedSequence  # impossible move, player was blocked
+                return failed_sequence  # impossible move, player was blocked
             elif (next_x, next_y) in warehouse.boxes:
                 if (next_x - 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
@@ -302,7 +305,7 @@ def check_action_seq(warehouse, action_seq):
                     warehouse.boxes.append((next_x - 1, next_y))
                     x = next_x
                 else:
-                    return failedSequence  # box was blocked
+                    return failed_sequence  # box was blocked
             else:
                 x = next_x
         elif data == 'Right':
@@ -310,16 +313,17 @@ def check_action_seq(warehouse, action_seq):
             next_x = x + 1
             next_y = y
             if (next_x, next_y) in warehouse.walls:
-                return failedSequence  # impossible move
+                return failed_sequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                if (next_x + 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
+                if (next_x + 1, next_y) not in warehouse.walls \
+                        and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
                     warehouse.boxes.append((next_x + 1, next_y))
                     x = next_x
                 else:
-                    return failedSequence  # box was blocked
+                    return failed_sequence  # box was blocked
             else:
                 x = next_x
         elif data == 'Up':
@@ -327,16 +331,17 @@ def check_action_seq(warehouse, action_seq):
             next_y = y - 1
             next_x = x
             if (next_x, next_y) in warehouse.walls:
-                return failedSequence  # impossible move
+                return failed_sequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                if (next_x, next_y - 1) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
+                if (next_x, next_y - 1) not in warehouse.walls \
+                        and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
                     warehouse.boxes.append((next_x, next_y - 1))
                     y = next_y
                 else:
-                    return failedSequence  # box was blocked
+                    return failed_sequence  # box was blocked
             else:
                 y = next_y
         elif data == 'Down':
@@ -344,25 +349,25 @@ def check_action_seq(warehouse, action_seq):
             next_y = y + 1
             next_x = x
             if (next_x, next_y) in warehouse.walls:
-                return failedSequence  # impossible move
+                return failed_sequence  # impossible move
             elif (next_x, next_y) in warehouse.boxes:
-                if (next_x, next_y + 1) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
+                if (next_x, next_y + 1) not in warehouse.walls \
+                        and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
                     warehouse.boxes.append((next_x, next_y + 1))
                     y = next_y
                 else:
-                    return failedSequence  # box was blocked
+                    return failed_sequence  # box was blocked
             else:
                 y = next_y
         else:
             raise ValueError("No action sequence")
-            return failedSequence
 
     # print statement just to check it got to the end and actions are valid
-    applicableSequence = 'Yes'
-    print (applicableSequence)
+    applicable_sequence = 'Yes'
+    print(applicable_sequence)
 
     # implement change character information for updating
     warehouse.worker = x, y
@@ -394,7 +399,7 @@ def check_action_seq(warehouse, action_seq):
     '''
     End adapted code from Sokoban.py Warehouse.__str__ method
     '''
-    print (str(warehouse))
+    print(str(warehouse))
     return str(warehouse)
 
 
