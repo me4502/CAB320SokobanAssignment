@@ -213,12 +213,12 @@ class MacroSokobanPuzzle(search.Problem):
     """
 
     def __init__(self, initial, goal):
-        self.initial = initial
+        self.initial = (((-1, -1), "None"), initial)
         self.goal = goal.replace("@", " ")
 
     def actions(self, state):
         current_warehouse = sokoban.Warehouse()
-        current_warehouse.extract_locations(state.split(sep="\n"))
+        current_warehouse.extract_locations(state[1].split(sep="\n"))
         global bad_cells
 
         if bad_cells is None:
@@ -238,14 +238,14 @@ class MacroSokobanPuzzle(search.Problem):
 
     def result(self, state, action):
         current_warehouse = sokoban.Warehouse()
-        current_warehouse.extract_locations(state.split(sep="\n"))
+        current_warehouse.extract_locations(state[1].split(sep="\n"))
         box = action[0]
         if box in current_warehouse.boxes:
             offset = direction_to_offset(action[1])
             current_warehouse.worker = box
             current_warehouse.boxes.remove(box)
             current_warehouse.boxes.append(add_tuples(box, offset))
-            return str(current_warehouse)
+            return action, str(current_warehouse)
         else:
             print(str(current_warehouse))
             print(box)
@@ -253,7 +253,7 @@ class MacroSokobanPuzzle(search.Problem):
             raise ValueError("Box not in warehouse!")
 
     def goal_test(self, state):
-        return state.replace("@", " ") == self.goal
+        return state[1].replace("@", " ") == self.goal
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
