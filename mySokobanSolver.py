@@ -82,7 +82,7 @@ def taboo_cells(warehouse):
     wall_square = '#'
     taboo_square = 'X'
 
-    def is_corner_cell(warehouse, x, y, wall = 0):
+    def is_corner_cell(warehouse, x, y, wall=0):
         """
         cell is in a corner if there is at least 1 wall above/below
         and at least one wall left/right...
@@ -113,9 +113,9 @@ def taboo_cells(warehouse):
     warehouse_2d = [list(line) for line in warehouse_str.split('\n')]
 
     # apply rule 1
-    for y in range(len(warehouse_2d)-1):
+    for y in range(len(warehouse_2d) - 1):
         inside = False
-        for x in range(len(warehouse_2d[0])-1):
+        for x in range(len(warehouse_2d[0]) - 1):
             # move through row in warehouse until we hit first wall
             # means we are now inside the warehouse
             if not inside:
@@ -132,21 +132,21 @@ def taboo_cells(warehouse):
                             warehouse_2d[y][x] = taboo_square
 
     # apply rule 2
-    for y in range(1, len(warehouse_2d)-1):
-        for x in range(1, len(warehouse_2d[0])-1):
+    for y in range(1, len(warehouse_2d) - 1):
+        for x in range(1, len(warehouse_2d[0]) - 1):
             if warehouse_2d[y][x] == taboo_square \
                     and is_corner_cell(warehouse_2d, x, y):
-                row = warehouse_2d[y][x+1:]
-                col = [row[x] for row in warehouse_2d[y+1:][:]]
+                row = warehouse_2d[y][x + 1:]
+                col = [row[x] for row in warehouse_2d[y + 1:][:]]
                 # fill in taboo_cells in row to the right of corner taboo cell
                 for x2 in range(len(row)):
                     if row[x2] in target_squares or row[x2] == wall_square:
                         break
                     if row[x2] == taboo_square \
-                            and is_corner_cell(warehouse_2d, x2+x+1, y):
+                            and is_corner_cell(warehouse_2d, x2 + x + 1, y):
                         if all([is_corner_cell(warehouse_2d, x3, y, 1)
-                                for x3 in range(x+1, x2+x+1)]):
-                            for x4 in range(x+1, x2+x+1):
+                                for x3 in range(x + 1, x2 + x + 1)]):
+                            for x4 in range(x + 1, x2 + x + 1):
                                 warehouse_2d[y][x4] = 'X'
                 # fill in taboo_cells in column moving down from corner taboo
                 # cell
@@ -154,10 +154,10 @@ def taboo_cells(warehouse):
                     if col[y2] in target_squares or col[y2] == wall_square:
                         break
                     if col[y2] == taboo_square \
-                            and is_corner_cell(warehouse_2d, x, y2+y+1):
+                            and is_corner_cell(warehouse_2d, x, y2 + y + 1):
                         if all([is_corner_cell(warehouse_2d, x, y3, 1)
-                                for y3 in range(y+1, y2+y+1)]):
-                            for y4 in range(y+1, y2+y+1):
+                                for y3 in range(y + 1, y2 + y + 1)]):
+                            for y4 in range(y + 1, y2 + y + 1):
                                 warehouse_2d[y4][x] = 'X'
 
     # convert 2D array back into string
@@ -454,6 +454,7 @@ def can_go_there(warehouse, dst):
         return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
 
     class FindPathProblem(search.Problem):
+
         def value(self, state):
             return heuristic(state)
 
@@ -496,6 +497,24 @@ def solve_sokoban_macro(warehouse):
 
     # "INSERT YOUR CODE HERE"
 
-    raise NotImplementedError()
+    goal = str(warehouse).replace("$", " ").replace(".", "*")
+    M = search.breadth_first_graph_search(
+        MacroSokobanPuzzle(str(warehouse), goal))
+    macro_actions = M.path()
+
+    # TODO:
+    # need to somehow split the object into the various lists - as to only
+    # return the actions not return the warehouse str
+    print (macro_actions)
+
+    # when in goal state the MacroSokobanPuzzle.action returns 'None'
+    if M.action == 'None':
+        # puzzle is in goal state, return []
+        return str([])
+    # TODO:
+    # elif returns impossible to solve
+    else:
+        # return sequence of macro actions, M
+        return str(M.action)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
