@@ -5,7 +5,6 @@ will be called by a marker script.
 You should complete the functions and classes according to their specified
 interfaces.
 """
-
 import search
 import sokoban
 from search import astar_graph_search as astar_graph
@@ -171,6 +170,41 @@ def taboo_cells(warehouse):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+def iterative_deepening_astar(problem, main_limit=100, h=None):
+    h = search.memoize(h or problem.h)
+    heuristic = lambda n: n.path_cost + h(n)
+
+    initial = search.Node(problem.initial)
+    bound = heuristic(initial)
+
+    # Algorithm based off psuedocode from
+    # https://en.wikipedia.org/wiki/Iterative_deepening_A*#Pseudocode
+    def recursive_search(node, current_cost, limit):
+        if current_cost + heuristic(node) > limit:
+            return current_cost + heuristic(node)
+        if problem.goal_test(node.state):
+            return node
+        value = main_limit  # Large value at the start.
+        for child in node.expand(problem):
+            result = recursive_search(child,
+                                      current_cost + 1,
+                                      limit)
+            if type(result) is search.Node:
+                return result
+            elif type(result) is int and result < value:
+                value = result
+        return value
+
+    while True:
+        result = recursive_search(initial, 0, bound)
+        if type(result) is search.Node:
+            return result
+        elif type(result) is int:
+            if result == main_limit:
+                return None
+            bound = result
+
+
 class SokobanPuzzle(search.Problem):
     """
     Class to represent a Sokoban puzzle.
@@ -254,6 +288,9 @@ class MacroSokobanPuzzle(search.Problem):
 
     def goal_test(self, state):
         return state[1].replace("@", " ") == self.goal
+
+    def value(self, state):
+        return 1
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
