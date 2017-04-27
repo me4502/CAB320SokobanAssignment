@@ -539,6 +539,8 @@ def solve_sokoban_macro(warehouse):
         MacroSokobanPuzzle(str(warehouse), goal))
     macro_actions = M.path()
 
+    macro_actions = [e.action for e in macro_actions]
+
     # TODO:
     # need to somehow split the object into the various lists - as to only
     # return the actions not return the warehouse str

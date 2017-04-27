@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 
-from sokoban import Warehouse
+from sokoban import Warehouse, find_2D_iterator
 from mySokobanSolver import taboo_cells
 
 def test_taboo_cells(n):
@@ -10,6 +10,7 @@ def test_taboo_cells(n):
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     answer = taboo_cells(wh)
+    print(set(find_2D_iterator(answer.split('\n'), "X")))
     print(answer)
 
 if __name__ == "__main__":
