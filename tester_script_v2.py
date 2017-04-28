@@ -130,7 +130,7 @@ def test_check_elem_action_seq():
 
 
 def test_solve_sokoban_elem():
-    problem_file = "./warehouses/warehouse_11.txt"
+    problem_file = "./warehouses/warehouse_05.txt"
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     # wh.extract_locations(puzzle_t1.split(sep='\n'))
