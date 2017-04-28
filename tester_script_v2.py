@@ -130,18 +130,18 @@ def test_check_elem_action_seq():
 
 
 def test_solve_sokoban_elem():
-#    problem_file = "./warehouses/warehouse_01.txt"
+    problem_file = "./warehouses/warehouse_11.txt"
     wh = Warehouse()
-#    wh.read_warehouse_file(problem_file)
-    wh.extract_locations(puzzle_t1.split(sep='\n'))
+    wh.read_warehouse_file(problem_file)
+    # wh.extract_locations(puzzle_t1.split(sep='\n'))
     print(wh)
     print('\nElementary solution')
     answer = solve_sokoban_elem(wh)
     print(answer)
-    if  answer ==  ['Right', 'Right']:
-        print('Test solve_sokoban_elem passed\n')
-    else:
-        print('** Test solve_sokoban_elem failed\n')
+    # if  answer ==  ['Right', 'Right']:
+    #     print('Test solve_sokoban_elem passed\n')
+    # else:
+    #     print('** Test solve_sokoban_elem failed\n')
 
 
 def test_can_go_there():
@@ -207,16 +207,16 @@ def test_macro_search():
     print(str(node))
 
 if __name__ == "__main__":
-#    test_main_search()
-# /test_macro_search()
-#    test_warehouse_1() # test Warehouse
-#    test_warehouse_2() # test Warehouse
-
-#    print(my_team())  # should print your team
-
-#    test_taboo_cells()
-#    test_check_elem_action_seq()
-#    test_solve_sokoban_elem()
-#    test_can_go_there()
-     test_solve_sokoban_macro()
-#    test_check_macro_action_seq()
+    # test_main_search()
+    # test_macro_search()
+    # test_warehouse_1() # test Warehouse
+    # test_warehouse_2() # test Warehouse
+    #
+    # print(my_team())  # should print your team
+    #
+    # test_taboo_cells()
+    # test_check_elem_action_seq()
+    test_solve_sokoban_elem()
+    # test_can_go_there()
+    # test_solve_sokoban_macro()
+    # test_check_macro_action_seq()

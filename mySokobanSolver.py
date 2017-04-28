@@ -49,6 +49,22 @@ def direction_to_offset(direction):
         raise ValueError("Unknown direction")
 
 
+def find_worker_goal(box, push_direction):
+    """
+    Find the goal coordinates for worker given a box and a push direction
+    """
+    offset = (0, 0)
+    if push_direction == "Left":
+        offset = (1, 0)
+    elif push_direction == "Right":
+        offset = (-1, 0)
+    elif push_direction == "Up":
+        offset = (0, 1)
+    elif push_direction == "Down":
+        offset = (0, -1)
+    return add_tuples(box, offset)
+
+
 def add_tuples(tuple1, tuple2):
     return tuple1[0] + tuple2[0], tuple1[1] + tuple2[1]
 
@@ -459,9 +475,62 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     """
 
-    # "INSERT YOUR CODE HERE"
+    macro_actions = solve_sokoban_macro(warehouse)
 
-    raise NotImplementedError()
+    # check if already solved
+    if len(macro_actions) == 0:
+        return macro_actions
+
+    # check if impossible
+    if macro_actions == ['Impossible']:
+        return macro_actions
+
+    worker_path = []
+
+    for macro_action in macro_actions[1:]:
+        target_box = macro_action[0]
+        push_direction = macro_action[1]
+        worker_goal = find_worker_goal(target_box, push_direction)
+
+        def heuristic(n):
+            state = n.state
+            return ((state[1] - worker_goal[1]) ** 2) + ((state[0] - worker_goal[0]) ** 2)
+
+        class FindPathProblem(search.Problem):
+
+            def value(self, state):
+                return heuristic(state)
+
+            def result(self, state, action):
+                new_state = add_tuples(state, action)
+                return new_state
+
+            def actions(self, state):
+                for offset in offset_states:
+                    new_state = add_tuples(state, offset)
+                    if new_state not in warehouse.boxes and new_state not in warehouse.walls:
+                        yield offset
+
+        nodes = astar_graph(FindPathProblem(warehouse.worker, worker_goal), heuristic)
+
+        if nodes is None:
+            return ['Impossible']
+
+        # build list of actions to get worker next to target box
+        for node in nodes.path()[1:]:
+            worker_path.append(offset_to_direction(node.action))
+
+        # add the actual push action
+        worker_path.append(push_direction)
+
+        # move target box to new position
+        warehouse.boxes.remove(target_box)
+        warehouse.boxes.append(add_tuples(target_box, direction_to_offset(push_direction)))
+
+        # move worker to new position
+        warehouse.worker = target_box
+
+    return worker_path
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -552,11 +621,11 @@ def solve_sokoban_macro(warehouse):
     # if no box is in the original state of the puzzle, it is in a goal state
     if '$' not in str(state_check[0]):
         # puzzle is in goal state, return []
-        return str([])
-    # when the puzzle cannot be solved MacroSokobanPuzzle.action retuns 'None'
+        return []
+    # when the puzzle cannot be solved MacroSokobanPuzzle.action returns 'None'
     elif M.action == 'None':
         # return ['Impossible']
-        return str(['Impossible'])
+        return ['Impossible']
     else:
         # return sequence of macro actions, M
         return macro_actions
