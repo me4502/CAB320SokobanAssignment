@@ -160,7 +160,7 @@ def test_solve_sokoban_macro():
     wh.extract_locations(puzzle_t3.split(sep='\n'))
     print(wh)
     answer = solve_sokoban_macro(wh)
-    # print(answer)
+    print(answer)
 #    assert( answer ==  [ ((2,3),'Right'), ((2,4),'Right'), ((3,3),'Left') , ((3,2),'Left') ] )
 #    print(wh.worker) # x,y  coords !!
 #    print(wh.boxes)  # x,y  coords !!

@@ -532,28 +532,33 @@ def solve_sokoban_macro(warehouse):
         If the puzzle is already in a goal state, simply return []
     """
 
-    # "INSERT YOUR CODE HERE"
-
+    # specify the goal
     goal = str(warehouse).replace("$", " ").replace(".", "*")
-    M = search.breadth_first_graph_search(
-        MacroSokobanPuzzle(str(warehouse), goal))
-    macro_actions = M.path()
 
+    # specify heuristic
+    def h(n): return 1
+
+    # execute iterative_deepening_astar to solve the puzzle
+    M = iterative_deepening_astar(
+        MacroSokobanPuzzle(str(warehouse), goal), 15, h)
+    # take the returned action and it's paths to get there
+    macro_actions = M.path()
+    # extract the action data from the node data
     macro_actions = [e.action for e in macro_actions]
 
-    # TODO:
-    # need to somehow split the object into the various lists - as to only
-    # return the actions not return the warehouse str
-    print (macro_actions)
-
-    # when in goal state the MacroSokobanPuzzle.action returns 'None'
-    if M.action == 'None':
+    # extract the state data from the node data
+    state_check = M.path()
+    state_check = [b.state for b in state_check]
+    # if no box is in the original state of the puzzle, it is in a goal state
+    if '$' not in str(state_check[0]):
         # puzzle is in goal state, return []
         return str([])
-    # TODO:
-    # elif returns impossible to solve
+    # when the puzzle cannot be solved MacroSokobanPuzzle.action retuns 'None'
+    elif M.action == 'None':
+        # return ['Impossible']
+        return str(['Impossible'])
     else:
         # return sequence of macro actions, M
-        return str(M.action)
+        return macro_actions
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
