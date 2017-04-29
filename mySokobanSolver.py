@@ -68,6 +68,10 @@ def find_worker_goal(box, push_direction):
 def add_tuples(tuple1, tuple2):
     return tuple1[0] + tuple2[0], tuple1[1] + tuple2[1]
 
+
+def manhattan_distance(a, b):
+    return abs(a[0] - b[0]) + abs(a[0] - b[0])
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -605,11 +609,22 @@ def solve_sokoban_macro(warehouse):
     goal = str(warehouse).replace("$", " ").replace(".", "*")
 
     # specify heuristic
-    def h(n): return 1
+    def h(n):
+        state = n.state[1]
+        wh = sokoban.Warehouse()
+        wh.extract_locations(state.split('\n'))
+        num_targets = len(wh.targets)
+        heuristic = 0
+        for box in wh.boxes:
+            dist = 0
+            for target in wh.targets:
+                dist += manhattan_distance(box, target)
+            heuristic += (dist / num_targets)
+        print('h: ', heuristic)
+        return heuristic
 
     # execute iterative_deepening_astar to solve the puzzle
-    M = iterative_deepening_astar(
-        MacroSokobanPuzzle(str(warehouse), goal), 15, h)
+    M = iterative_deepening_astar(MacroSokobanPuzzle(str(warehouse), goal), 35, h)
     # take the returned action and it's paths to get there
     macro_actions = M.path()
     # extract the action data from the node data
