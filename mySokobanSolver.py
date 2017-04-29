@@ -192,7 +192,9 @@ def taboo_cells(warehouse):
 
 def iterative_deepening_astar(problem, main_limit=100, h=None):
     h = search.memoize(h or problem.h)
-    heuristic = lambda n: n.path_cost + h(n)
+
+    def heuristic(n):
+        return n.path_cost + h(n)
 
     initial = search.Node(problem.initial)
     bound = heuristic(initial)
@@ -200,19 +202,20 @@ def iterative_deepening_astar(problem, main_limit=100, h=None):
     # Algorithm based off psuedocode from
     # https://en.wikipedia.org/wiki/Iterative_deepening_A*#Pseudocode
     def recursive_search(node, current_cost, limit):
-        if current_cost + heuristic(node) > limit:
-            return current_cost + heuristic(node)
+        node_heuristic = heuristic(node)
+        if current_cost + node_heuristic > limit:
+            return current_cost + node_heuristic
         if problem.goal_test(node.state):
             return node
         value = main_limit  # Large value at the start.
         for child in node.expand(problem):
-            result = recursive_search(child,
-                                      current_cost + 1,
-                                      limit)
-            if type(result) is search.Node:
-                return result
-            elif type(result) is int and result < value:
-                value = result
+            inner_result = recursive_search(child,
+                                            current_cost + 1,
+                                            limit)
+            if type(inner_result) is search.Node:
+                return inner_result
+            elif type(inner_result) is int and inner_result < value:
+                value = inner_result
         return value
 
     while True:
@@ -223,41 +226,8 @@ def iterative_deepening_astar(problem, main_limit=100, h=None):
             if result == main_limit:
                 return None
             bound = result
-
-
-class SokobanPuzzle(search.Problem):
-    """
-    Class to represent a Sokoban puzzle.
-    Your implementation should be compatible with the
-    search functions of the provided module 'search.py'.
-
-    Use the sliding puzzle and the pancake puzzle for inspiration!
-    """
-
-    def __init__(self, warehouse, initial):
-        self.initial = initial
-        self.warehouse = warehouse
-        # TODO Find goal.
-
-    def actions(self, state):
-        """
-        Return the list of actions that can be executed in the given state
-        if these actions do not push a box in a taboo cell.
-        The actions must belong to the list ['Left', 'Down', 'Right', 'Up']
-        """
-        global bad_cells
-        if bad_cells is None:
-            bad_cells = set(find_2D_iterator(taboo_cells(self.warehouse)
-                                             .split("\n"), "X"))
-
-        for offset in offset_states:
-            new_state = add_tuples(state, offset)
-            beyond_state = add_tuples(new_state, offset)
-            if new_state not in self.warehouse.walls:
-                if new_state in self.warehouse.boxes:
-                    if beyond_state in bad_cells:
-                        continue
-                    yield offset_to_direction(offset)
+        else:
+            print(type(result) + " is an unhandled type")
 
 
 class MacroSokobanPuzzle(search.Problem):
@@ -606,7 +576,8 @@ def solve_sokoban_macro(warehouse):
     """
 
     # specify the goal
-    goal = str(warehouse).replace("$", " ").replace(".", "*")
+    warehouse_string = str(warehouse)
+    goal = warehouse_string.replace("$", " ").replace(".", "*")
 
     # specify heuristic
     def h(n):
@@ -623,8 +594,16 @@ def solve_sokoban_macro(warehouse):
         print('h: ', heuristic)
         return heuristic
 
+    limit = 15 + len(warehouse.boxes) * 5
+
     # execute iterative_deepening_astar to solve the puzzle
-    M = iterative_deepening_astar(MacroSokobanPuzzle(str(warehouse), goal), 35, h)
+    M = iterative_deepening_astar(MacroSokobanPuzzle(warehouse_string, goal),
+                                  limit, lambda n: 1) # TODO Fix
+    # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
+    if M is None:
+        # return ['Impossible']
+        return ['Impossible']
+
     # take the returned action and it's paths to get there
     macro_actions = M.path()
     # extract the action data from the node data
@@ -637,10 +616,6 @@ def solve_sokoban_macro(warehouse):
     if '$' not in str(state_check[0]):
         # puzzle is in goal state, return []
         return []
-    # when the puzzle cannot be solved MacroSokobanPuzzle.action returns 'None'
-    elif M.action == 'None':
-        # return ['Impossible']
-        return ['Impossible']
     else:
         # return sequence of macro actions, M
         return macro_actions

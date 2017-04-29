@@ -25,7 +25,7 @@ from __future__ import division
 import search
 from sokoban import Warehouse
 
-from mySokobanSolver import my_team, taboo_cells, SokobanPuzzle, \
+from mySokobanSolver import my_team, taboo_cells, \
     check_action_seq, MacroSokobanPuzzle, iterative_deepening_astar
 from mySokobanSolver import solve_sokoban_elem, can_go_there, solve_sokoban_macro
 
@@ -176,23 +176,6 @@ def test_check_macro_action_seq():
     print( check_macro_action_seq(wh.copy(),[((2, 3), 'Right')]) )
     print("\ntesting [((2, 3), 'Left')]")
     print( check_macro_action_seq(wh.copy(), [((2, 3), 'Left')]) )
-
-
-def test_main_search():
-    wh = Warehouse()
-    wh.extract_locations(puzzle_t1.split(sep='\n'))
-    print(wh)
-
-    dst = (4, 5)
-
-    def heuristic(n):
-        state = n.state
-        # distance = sqrt(xdiff^2 + ydiff^2)
-        return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
-
-    node = search.astar_graph_search(SokobanPuzzle(wh.worker, dst),
-                                     heuristic)
-    print(node)
 
 
 def test_macro_search():
