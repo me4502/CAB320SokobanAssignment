@@ -5,8 +5,6 @@ will be called by a marker script.
 You should complete the functions and classes according to their specified
 interfaces.
 """
-import math
-
 import search
 import sokoban
 from search import astar_graph_search as astar_graph
@@ -73,7 +71,6 @@ def add_tuples(tuple1, tuple2):
 
 def manhattan_distance(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -190,41 +187,32 @@ def taboo_cells(warehouse):
         warehouse_str = warehouse_str.replace(char, ' ')
     return warehouse_str
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-def iterative_deepening_astar(problem, h, main_limit=100):
+def iterative_deepening_astar(problem, main_limit=100, h=None):
     h = search.memoize(h or problem.h)
+    heuristic = lambda n: n.path_cost + h(n)
 
-    # Base A* heuristic - adding path cost to passed-in heuristic.
-    def heuristic(n):
-        return n.path_cost + h(n)
-
-    # Find the initial state Node, and create the initial bound heuristic.
     initial = search.Node(problem.initial)
     bound = heuristic(initial)
 
     # Algorithm based off psuedocode from
     # https://en.wikipedia.org/wiki/Iterative_deepening_A*#Pseudocode
     def recursive_search(node, current_cost, limit):
-        # Ensure the current heuristic hasn't gone over the limit.
-        node_heuristic = heuristic(node)
-        if current_cost + node_heuristic > limit:
-            return current_cost + node_heuristic
-        # Check if the search has found a goal state.
+        if current_cost + heuristic(node) > limit:
+            return current_cost + heuristic(node)
         if problem.goal_test(node.state):
             return node
         value = main_limit  # Large value at the start.
-        # Recursively search over all child nodes.
         for child in node.expand(problem):
-            inner_result = recursive_search(child,
-                                            current_cost + 1,
-                                            limit)
-            if type(inner_result) is search.Node:
-                return inner_result
-            elif type(inner_result) is int and inner_result < value:
-                value = inner_result
+            result = recursive_search(child,
+                                      current_cost + 1,
+                                      limit)
+            if type(result) is search.Node:
+                return result
+            elif type(result) is int and result < value:
+                value = result
         return value
 
     while True:
@@ -235,16 +223,47 @@ def iterative_deepening_astar(problem, h, main_limit=100):
             if result == main_limit:
                 return None
             bound = result
-        else:
-            print(str(type(result)) + " is an unhandled type")
 
 
 class SokobanPuzzle(search.Problem):
     """
     Class to represent a Sokoban puzzle.
+    Your implementation should be compatible with the
+    search functions of the provided module 'search.py'.
+
+    Use the sliding puzzle and the pancake puzzle for inspiration!
+    """
+
+    def __init__(self, warehouse, initial):
+        self.initial = initial
+        self.warehouse = warehouse
+        # TODO Find goal.
+
+    def actions(self, state):
+        """
+        Return the list of actions that can be executed in the given state
+        if these actions do not push a box in a taboo cell.
+        The actions must belong to the list ['Left', 'Down', 'Right', 'Up']
+        """
+        global bad_cells
+        if bad_cells is None:
+            bad_cells = set(find_2D_iterator(taboo_cells(self.warehouse)
+                                             .split("\n"), "X"))
+
+        for offset in offset_states:
+            new_state = add_tuples(state, offset)
+            beyond_state = add_tuples(new_state, offset)
+            if new_state not in self.warehouse.walls:
+                if new_state in self.warehouse.boxes:
+                    if beyond_state in bad_cells:
+                        continue
+                    yield offset_to_direction(offset)
+
+
+class MacroSokobanPuzzle(search.Problem):
+    """
+    Class to represent a Sokoban puzzle.
     This solves at a larger scale, by finding a list of macro moves.
-    
-    State is stored as a tuple of offset and warehouse string.
     """
 
     def __init__(self, initial, goal):
@@ -252,18 +271,14 @@ class SokobanPuzzle(search.Problem):
         self.goal = goal.replace("@", " ")
 
     def actions(self, state):
-        # Extract the warehouse from the current state.
         current_warehouse = sokoban.Warehouse()
         current_warehouse.extract_locations(state[1].split(sep="\n"))
         global bad_cells
 
         if bad_cells is None:
-            # If taboo cells haven't been computed, compute them.
-            # This is done once for optimisation purposes.
             bad_cells = set(find_2D_iterator(taboo_cells(current_warehouse)
                                              .split("\n"), "X"))
 
-        # Find every box, and every direction it can be pushed.
         for box in current_warehouse.boxes:
             for offset in offset_states:
                 player_position = (box[0] + (offset[0] * -1),
@@ -276,55 +291,26 @@ class SokobanPuzzle(search.Problem):
                     yield (box, offset_to_direction(offset))
 
     def result(self, state, action):
-        # Extract the warehouse from the current state.
         current_warehouse = sokoban.Warehouse()
         current_warehouse.extract_locations(state[1].split(sep="\n"))
         box = action[0]
         if box in current_warehouse.boxes:
-            # Remove the old box, set the worker to the position, and add the
-            # new box position. This moves the box with the worker.
             offset = direction_to_offset(action[1])
             current_warehouse.worker = box
             current_warehouse.boxes.remove(box)
             current_warehouse.boxes.append(add_tuples(box, offset))
             return action, str(current_warehouse)
         else:
-            # If the box isn't in the warehouse, something went very wrong.
             print(str(current_warehouse))
             print(box)
             print(current_warehouse.boxes)
             raise ValueError("Box not in warehouse!")
 
     def goal_test(self, state):
-        # Check that the state warehouse has all targets filled.
         return state[1].replace("@", " ") == self.goal
 
     def value(self, state):
-        return 1  # Changes have a cost of 1
-
-
-class FindPathProblem(search.Problem):
-    def __init__(self, initial, warehouse, goal=None):
-        self.initial = initial
-        self.goal = goal
-        self.warehouse = warehouse
-
-    def value(self, state):
-        return 1  # Single movements have a cost of 1
-
-    def result(self, state, action):
-        # The result is the old state, with the action applied.
-        new_state = add_tuples(state, action)
-        return new_state
-
-    def actions(self, state):
-        for offset in offset_states:
-            new_state = add_tuples(state, offset)
-            # Check that the location isn't a wall or box
-            if new_state not in self.warehouse.boxes \
-                    and new_state not in self.warehouse.walls:
-                yield offset
-
+        return 1
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -369,8 +355,7 @@ def check_action_seq(warehouse, action_seq):
             if (next_x, next_y) in warehouse.walls:
                 return failed_sequence  # impossible move, player was blocked
             elif (next_x, next_y) in warehouse.boxes:
-                if (next_x - 1, next_y) not in warehouse.walls and (
-                next_x, next_y) in warehouse.boxes:
+                if (next_x - 1, next_y) not in warehouse.walls and (next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
@@ -513,11 +498,24 @@ def solve_sokoban_elem(warehouse):
 
         def heuristic(n):
             state = n.state
-            return ((state[1] - worker_goal[1]) ** 2) \
-                + ((state[0] - worker_goal[0]) ** 2)
+            return ((state[1] - worker_goal[1]) ** 2) + ((state[0] - worker_goal[0]) ** 2)
 
-        nodes = astar_graph(FindPathProblem(warehouse.worker, warehouse,
-                                            worker_goal), heuristic)
+        class FindPathProblem(search.Problem):
+
+            def value(self, state):
+                return heuristic(state)
+
+            def result(self, state, action):
+                new_state = add_tuples(state, action)
+                return new_state
+
+            def actions(self, state):
+                for offset in offset_states:
+                    new_state = add_tuples(state, offset)
+                    if new_state not in warehouse.boxes and new_state not in warehouse.walls:
+                        yield offset
+
+        nodes = astar_graph(FindPathProblem(warehouse.worker, worker_goal), heuristic)
 
         if nodes is None:
             return ['Impossible']
@@ -531,8 +529,7 @@ def solve_sokoban_elem(warehouse):
 
         # move target box to new position
         warehouse.boxes.remove(target_box)
-        warehouse.boxes.append(
-            add_tuples(target_box, direction_to_offset(push_direction)))
+        warehouse.boxes.append(add_tuples(target_box, direction_to_offset(push_direction)))
 
         # move worker to new position
         warehouse.worker = target_box
@@ -562,17 +559,27 @@ def can_go_there(warehouse, dst):
 
     def heuristic(n):
         state = n.state
-        # distance = sqrt(xdiff^2 + ydiff^2). Basic distance formula heuristic.
-        return math.sqrt(((state[1] - dst[1]) ** 2)
-                         + ((state[0] - dst[0]) ** 2))
+        # distance = sqrt(xdiff^2 + ydiff^2). sqrt not required as we only
+        # care about order, and it's slow
+        return ((state[1] - dst[1]) ** 2) + ((state[0] - dst[0]) ** 2)
 
-    dst = (dst[1], dst[0])  # Destination is given in (row,col), not (x,y)
+    class FindPathProblem(search.Problem):
 
-    # Use an A* graph search on the FindPathProblem search
-    node = astar_graph(FindPathProblem(warehouse.worker, warehouse, dst),
-                       heuristic)
+        def value(self, state):
+            return heuristic(state)
 
-    # If a node was found, this is a valid destination
+        def result(self, state, action):
+            new_state = add_tuples(state, action)
+            return new_state
+
+        def actions(self, state):
+            for offset in offset_states:
+                new_state = add_tuples(state, offset)
+                if new_state not in warehouse.boxes \
+                        and new_state not in warehouse.walls:
+                    yield offset
+    node = astar_graph(FindPathProblem(warehouse.worker, dst), heuristic)
+
     return node is not None
 
 
@@ -599,8 +606,7 @@ def solve_sokoban_macro(warehouse):
     """
 
     # specify the goal
-    warehouse_string = str(warehouse)
-    goal = warehouse_string.replace("$", " ").replace(".", "*")
+    goal = str(warehouse).replace("$", " ").replace(".", "*")
 
     # specify heuristic
     def h(n):
@@ -610,22 +616,14 @@ def solve_sokoban_macro(warehouse):
         num_targets = len(wh.targets)
         heuristic = 0
         for box in wh.boxes:
-            dist = 0
+            target_dist = 0
             for target in wh.targets:
-                dist += manhattan_distance(box, target)
-            heuristic += (dist / num_targets)
-        return heuristic
-
-    limit = 15 + len(warehouse.boxes) * 5
+                target_dist += manhattan_distance(box, target)
+            heuristic += (target_dist / num_targets)
+        return int(heuristic)
 
     # execute iterative_deepening_astar to solve the puzzle
-    M = iterative_deepening_astar(SokobanPuzzle(warehouse_string, goal),
-                                  h, limit)
-    # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
-    if M is None:
-        # return ['Impossible']
-        return ['Impossible']
-
+    M = iterative_deepening_astar(MacroSokobanPuzzle(str(warehouse), goal), 35, h)
     # take the returned action and it's paths to get there
     macro_actions = M.path()
     # extract the action data from the node data
@@ -638,6 +636,10 @@ def solve_sokoban_macro(warehouse):
     if '$' not in str(state_check[0]):
         # puzzle is in goal state, return []
         return []
+    # when the puzzle cannot be solved MacroSokobanPuzzle.action returns 'None'
+    elif M.action == 'None':
+        # return ['Impossible']
+        return ['Impossible']
     else:
         # return sequence of macro actions, M
         return macro_actions
