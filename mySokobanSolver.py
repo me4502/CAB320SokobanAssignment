@@ -219,7 +219,8 @@ def iterative_deepening_astar(problem, h, main_limit=100):
         # Recursively search over all child nodes.
         for child in node.expand(problem):
             inner_result = recursive_search(child,
-                                            current_cost + 1,
+                                            current_cost +
+                                            problem.value(node.state),
                                             limit)
             if type(inner_result) is search.Node:
                 return inner_result
