@@ -230,7 +230,7 @@ def iterative_deepening_astar(problem, main_limit=100, h=None):
             print(type(result) + " is an unhandled type")
 
 
-class MacroSokobanPuzzle(search.Problem):
+class SokobanPuzzle(search.Problem):
     """
     Class to represent a Sokoban puzzle.
     This solves at a larger scale, by finding a list of macro moves.
@@ -597,8 +597,8 @@ def solve_sokoban_macro(warehouse):
     limit = 15 + len(warehouse.boxes) * 5
 
     # execute iterative_deepening_astar to solve the puzzle
-    M = iterative_deepening_astar(MacroSokobanPuzzle(warehouse_string, goal),
-                                  limit, lambda n: 1) # TODO Fix
+    M = iterative_deepening_astar(SokobanPuzzle(warehouse_string, goal),
+                                  limit, h) # TODO Fix
     # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
     if M is None:
         # return ['Impossible']

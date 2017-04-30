@@ -26,7 +26,7 @@ import search
 from sokoban import Warehouse
 
 from mySokobanSolver import my_team, taboo_cells, \
-    check_action_seq, MacroSokobanPuzzle, iterative_deepening_astar
+    check_action_seq, SokobanPuzzle, iterative_deepening_astar
 from mySokobanSolver import solve_sokoban_elem, can_go_there, solve_sokoban_macro
 
 
@@ -186,7 +186,7 @@ def test_macro_search():
     goal = str(wh).replace("$", " ").replace(".", "*")
 
     h = lambda n: 1
-    node = iterative_deepening_astar(MacroSokobanPuzzle(str(wh), goal), 15, h)
+    node = iterative_deepening_astar(SokobanPuzzle(str(wh), goal), 15, h)
     print(str(node))
 
 if __name__ == "__main__":
