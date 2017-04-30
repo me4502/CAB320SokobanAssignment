@@ -186,7 +186,7 @@ def test_macro_search():
     goal = str(wh).replace("$", " ").replace(".", "*")
 
     h = lambda n: 1
-    node = iterative_deepening_astar(SokobanPuzzle(str(wh), goal), 15, h)
+    node = iterative_deepening_astar(SokobanPuzzle(str(wh), goal), h, 15)
     print(str(node))
 
 if __name__ == "__main__":
