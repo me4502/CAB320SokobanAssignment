@@ -75,6 +75,9 @@ def manhattan_distance(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 
+def flip_tuple(a):
+    return a[1], a[0]
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -267,8 +270,8 @@ class SokobanPuzzle(search.Problem):
         # Find every box, and every direction it can be pushed.
         for box in current_warehouse.boxes:
             for offset in offset_states:
-                player_position = (box[0] + (offset[0] * -1),
-                                   box[1] + (offset[1] * -1))
+                player_position = flip_tuple((box[0] + (offset[0] * -1),
+                                              box[1] + (offset[1] * -1)))
                 new_box_position = add_tuples(box, offset)
                 if can_go_there(current_warehouse, player_position) \
                         and new_box_position not in bad_cells \
@@ -617,11 +620,11 @@ def solve_sokoban_macro(warehouse):
             heuristic += (dist / num_targets)
         return heuristic
 
-    limit = 15 + len(warehouse.boxes) * 5
+    limit = 15 + len(warehouse.boxes) * 10
 
     # execute iterative_deepening_astar to solve the puzzle
     M = iterative_deepening_astar(SokobanPuzzle(warehouse_string, goal),
-                                  h, limit)
+                                  lambda n: 1, limit)
     # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
     if M is None:
         # return ['Impossible']
