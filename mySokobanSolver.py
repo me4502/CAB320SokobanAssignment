@@ -517,8 +517,8 @@ def solve_sokoban_elem(warehouse):
 
         def heuristic(n):
             state = n.state
-            return ((state[1] - worker_goal[1]) ** 2) \
-                + ((state[0] - worker_goal[0]) ** 2)
+            return math.sqrt(((state[1] - worker_goal[1]) ** 2)
+                             + ((state[0] - worker_goal[0]) ** 2))
 
         nodes = astar_graph(FindPathProblem(warehouse.worker, warehouse,
                                             worker_goal), heuristic)
