@@ -625,14 +625,12 @@ def solve_sokoban_macro(warehouse):
                 dist = 0
                 for target in wh.targets:
                     dist += manhattan_distance(box, target)
-                heuristic += 0.8 * (dist / num_targets) \
-                             + 0.5 * manhattan_distance(warehouse.worker, box)
+                heuristic += 0.8 * (dist / num_targets) + 0.5 * manhattan_distance(warehouse.worker, box)
             else:
                 dist1 = []
                 for target in wh.targets:
                     dist1.append(manhattan_distance(box, target))
-                heuristic += 0.8 * min(dist1) \
-                             + 0.5 * manhattan_distance(warehouse.worker, box)
+                heuristic += 0.8 * min(dist1) + 0.5 * manhattan_distance(warehouse.worker, box)
         return heuristic
 
     # execute best_first_graph_search to solve the puzzle
