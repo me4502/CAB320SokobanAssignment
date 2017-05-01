@@ -130,7 +130,7 @@ def test_check_elem_action_seq():
 
 
 def test_solve_sokoban_elem():
-    problem_file = "./warehouses/warehouse_01.txt"
+    problem_file = "./warehouses/warehouse_75.txt"
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     # wh.extract_locations(puzzle_t1.split(sep='\n'))
@@ -190,6 +190,8 @@ def test_macro_search():
     print(str(node))
 
 if __name__ == "__main__":
+    import time
+    start_time = time.process_time()
     # test_macro_search()
     # test_warehouse_1() # test Warehouse
     # test_warehouse_2() # test Warehouse
@@ -202,3 +204,4 @@ if __name__ == "__main__":
     # test_can_go_there()
     # test_solve_sokoban_macro()
     # test_check_macro_action_seq()
+    print("\nElapsed time: {:.2f}s".format(time.process_time() - start_time))

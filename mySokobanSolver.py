@@ -614,11 +614,22 @@ def solve_sokoban_macro(warehouse):
         wh.extract_locations(state.split('\n'))
         num_targets = len(wh.targets)
         heuristic = 0
+        test = 1
         for box in wh.boxes:
-            dist = 0
-            for target in wh.targets:
-                dist += manhattan_distance(box, target)
-            heuristic += (dist / num_targets)
+            # dist = 0
+            # for target in wh.targets:
+            #     dist+= manhattan_distance(box, target)
+            # heuristic += (dist/num_targets)
+            if test == 1:
+                dist = 0
+                for target in wh.targets:
+                    dist += manhattan_distance(box, target)
+                heuristic += 0.8*(dist / num_targets) + 0.5*manhattan_distance(warehouse.worker, box)
+            else:
+                dist1 = []
+                for target in wh.targets:
+                    dist1.append(manhattan_distance(box, target))
+                heuristic += 0.8*min(dist1) + 0.5*manhattan_distance(warehouse.worker, box)
         return heuristic
 
     # execute best_first_graph_search to solve the puzzle
