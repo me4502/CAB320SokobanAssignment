@@ -620,11 +620,9 @@ def solve_sokoban_macro(warehouse):
             heuristic += (dist / num_targets)
         return heuristic
 
-    limit = 15 + len(warehouse.boxes) * 10
-
     # execute iterative_deepening_astar to solve the puzzle
-    M = iterative_deepening_astar(SokobanPuzzle(warehouse_string, goal),
-                                  lambda n: 1, limit)
+    M = search.best_first_graph_search(SokobanPuzzle(warehouse_string, goal),
+                                       h)
     # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
     if M is None:
         # return ['Impossible']
