@@ -78,6 +78,7 @@ def manhattan_distance(a, b):
 def flip_tuple(a):
     return a[1], a[0]
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -374,7 +375,7 @@ def check_action_seq(warehouse, action_seq):
                 return failed_sequence  # impossible move, player was blocked
             elif (next_x, next_y) in warehouse.boxes:
                 if (next_x - 1, next_y) not in warehouse.walls and (
-                next_x, next_y) in warehouse.boxes:
+                        next_x, next_y) in warehouse.boxes:
                     # can move the box!
                     # move successful
                     warehouse.boxes.remove((next_x, next_y))
@@ -624,12 +625,14 @@ def solve_sokoban_macro(warehouse):
                 dist = 0
                 for target in wh.targets:
                     dist += manhattan_distance(box, target)
-                heuristic += 0.8*(dist / num_targets) + 0.5*manhattan_distance(warehouse.worker, box)
+                heuristic += 0.8 * (dist / num_targets) \
+                             + 0.5 * manhattan_distance(warehouse.worker, box)
             else:
                 dist1 = []
                 for target in wh.targets:
                     dist1.append(manhattan_distance(box, target))
-                heuristic += 0.8*min(dist1) + 0.5*manhattan_distance(warehouse.worker, box)
+                heuristic += 0.8 * min(dist1) \
+                             + 0.5 * manhattan_distance(warehouse.worker, box)
         return heuristic
 
     # execute best_first_graph_search to solve the puzzle
