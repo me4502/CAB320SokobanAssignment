@@ -608,6 +608,7 @@ def solve_sokoban_macro(warehouse):
 
     # specify heuristic
     def h(n):
+        # Perform a manhattan distance heuristic
         state = n.state[1]
         wh = sokoban.Warehouse()
         wh.extract_locations(state.split('\n'))
@@ -623,7 +624,7 @@ def solve_sokoban_macro(warehouse):
     # execute best_first_graph_search to solve the puzzle
     M = search.best_first_graph_search(SokobanPuzzle(warehouse_string, goal),
                                        h)
-    # when the puzzle cannot be solved MacroSokobanPuzzle returns 'None'
+    # when the puzzle cannot be solved SokobanPuzzle returns 'None'
     if M is None:
         # return ['Impossible']
         return ['Impossible']
